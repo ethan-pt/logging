@@ -1,0 +1,40 @@
+networks:
+  global-link:
+    external: true
+
+services:
+  homeserver-database:
+    image: postgres:18-alpine
+    container_name: homeserver-database
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d
+    networks:
+      - global-link
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+      interval: 5s
+      timeout: 20s
+      retries: 5
+      start_period: 10s
+  
+  collector-postgres:
+    build: ./collectors/postgres
+    container_name: collector-postgres
+    restart: unless-stopped
+    depends_on:
+      - homeserver-database
+    env_file:
+      - .env
+    volumes:
+      - ./collectors/postgres:/app
+    networks:
+      - global-link
+
+volumes:
+  postgres_data:
