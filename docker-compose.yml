@@ -26,13 +26,12 @@ services:
   collector-postgres:
     build: ./collectors/postgres
     container_name: collector-postgres
+    command: python collector.py
     restart: unless-stopped
     depends_on:
       - homeserver-database
     env_file:
       - .env
-    volumes:
-      - ./collectors/postgres:/app
     networks:
       - global-link
 
