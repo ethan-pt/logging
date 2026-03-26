@@ -7,7 +7,7 @@ CREATE SCHEMA IF NOT EXISTS security;
 
 CREATE TABLE metadata.service (
     id SERIAL PRIMARY KEY,
-    service_name TEXT NOT NULL,
+    service_name TEXT NOT NULL UNIQUE,
     service_type TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
