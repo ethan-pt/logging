@@ -24,7 +24,9 @@ services:
       start_period: 10s
   
   collector-postgres:
-    build: ./collectors/postgres
+    build: 
+      context: ./collectors
+      dockerfile: postgres/Dockerfile
     container_name: collector-postgres
     command: python collector.py
     restart: unless-stopped
