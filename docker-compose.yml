@@ -32,6 +32,8 @@ services:
     restart: unless-stopped
     depends_on:
       - homeserver-database
+    environment:
+      - PYTHONUNBUFFERED=1
     env_file:
       - .env
     networks:
