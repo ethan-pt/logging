@@ -2,6 +2,13 @@ import os
 import sys
 import time
 import psycopg
+import logging
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+)
 
 
 class DatabaseConnector:
@@ -25,11 +32,12 @@ class DatabaseConnector:
                     password=self.dbPassword
                 )
 
-                print("Connected to PostgreSQL database successfully.")
+                logging.info("Connected to PostgreSQL database successfully.")
                 return 
             except Exception as e:
-                print(f"Failed to connect to PostgreSQL database with exception: {e}\nRetrying in 5 seconds... ({i + 1}/{self.retries})")
+                logging.error(f"Failed to connect to PostgreSQL database with exception: {e}\nRetrying in 5 seconds... ({i + 1}/{self.retries})")
+                
                 time.sleep(5)
         
-        print("Exceeded maximum retries. Shutting down...")
+        logging.error("Exceeded maximum retries. Shutting down...")
         sys.exit(1)
