@@ -47,7 +47,7 @@ class PostgresCollector:
 
         while True:
             # Logs heartbeat, attempting to reconnect if it fails. 
-            if self.checkHeartbeat():
+            if self.getHeartbeat():
                 with self.connection.cursor() as cur:
                     cur.execute("""
                         INSERT INTO monitoring.heartbeat (service_id, status, timestamp)
@@ -65,7 +65,7 @@ class PostgresCollector:
                 self.connection = self.connector.connection
             
             # Logs active connections to database, attempting to reconnect if it fails.
-            activeConnections = self.checkConnections()
+            activeConnections = self.getConnections()
             if activeConnections is not None:
                 with self.connection.cursor() as cur:
                     cur.execute("""
@@ -84,7 +84,7 @@ class PostgresCollector:
                 self.connection = self.connector.connection
 
             # Logs database size, attempting to reconnect if it fails.
-            databaseSize = self.checkDatabaseSize()
+            databaseSize = self.getDatabaseSize()
             if databaseSize is not None:
                 with self.connection.cursor() as cur:
                     cur.execute("""
@@ -104,7 +104,7 @@ class PostgresCollector:
 
             time.sleep(self.interval)
 
-    def checkHeartbeat(self):
+    def getHeartbeat(self):
         try:
             with self.connection.cursor() as cur:
                 cur.execute("SELECT 1")
@@ -115,7 +115,7 @@ class PostgresCollector:
 
             return False
 
-    def checkConnections(self) -> int:
+    def getConnections(self) -> int:
         try:
             with self.connection.cursor() as cur:
                 cur.execute("SELECT count(*) FROM pg_stat_activity")
@@ -127,7 +127,7 @@ class PostgresCollector:
 
             return -1
     
-    def checkDatabaseSize(self) -> int:
+    def getDatabaseSize(self) -> int:
         try:
             with self.connection.cursor() as cur:
                 cur.execute("SELECT pg_database_size(current_database())")
