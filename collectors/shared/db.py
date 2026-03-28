@@ -42,7 +42,11 @@ class DatabaseConnector:
         logging.error("Exceeded maximum retries. Shutting down...")
         sys.exit(1)
     
-    def checkConnection(self):
+    def checkConnection(self, retry: bool = True) -> bool:
+        if not self.connection:
+            logging.warning("Attempted to check connection, but no active connection found.")
+
+            return False
         try:
             with self.connection.cursor() as cur:
                 cur.execute("SELECT 1")
