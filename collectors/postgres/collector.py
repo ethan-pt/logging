@@ -24,7 +24,7 @@ class PostgresCollector:
         self.serviceName = 'postgres'
         self.serviceType = 'database'
 
-    def start(self):
+    def start(self) -> None:
         logging.info("PostgreSQL Collector started. Registering service in metadata...")
 
         try:
@@ -115,7 +115,7 @@ class PostgresCollector:
 
             return False
 
-    def checkConnections(self):
+    def checkConnections(self) -> int:
         try:
             with self.connection.cursor() as cur:
                 cur.execute("SELECT count(*) FROM pg_stat_activity")
@@ -125,9 +125,9 @@ class PostgresCollector:
         except Exception as e:
             logging.error(f"Error checking database connections: {e}")
 
-            return None
+            return -1
     
-    def checkDatabaseSize(self):
+    def checkDatabaseSize(self) -> int:
         try:
             with self.connection.cursor() as cur:
                 cur.execute("SELECT pg_database_size(current_database())")
@@ -137,9 +137,9 @@ class PostgresCollector:
         except Exception as e:
             logging.error(f"Error checking database size: {e}")
 
-            return None
+            return -1
 
-    def stop(self):
+    def stop(self) -> None:
         if self.connection:
             self.connection.close()
 

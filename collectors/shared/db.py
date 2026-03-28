@@ -22,7 +22,7 @@ class DatabaseConnector:
 
         self.connection = None
 
-    def connect(self):
+    def connect(self) -> None:
         for i in range(self.retries):
             try:
                 self.connection = psycopg.connect(
