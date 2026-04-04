@@ -1,31 +1,31 @@
 # Homelab Logging System
 
-Ideally provides a robust and versatile logging and data collection system tailored for my homelab. It gathers diverse data types from various sources, providing a centralized platform for personal monitoring, analysis, and experimentation. It's designed to be as modular as possible while remaining lightweight and mostly hands-off, which ideal for my use case.
+Collects all kinds of data from and about my homelab Ubuntu server that I built from spare parts I've hoarded and been crouching over like a dragon in the last 12 years. The idea is that it's as modular and reliable as possible so I can easily integrate new projects quickly and easily with minimal maintenance and, soon, monitor processes and their performance, analyze security stuff, and more efficiently plan for future upgrades.
 
-## Data Collection Capabilities
+## Data Collection
 
-The system is structured to collect a wide array of data for personal insights, as outlined by its PostgreSQL schema:
+The system is structured to collect all kinds of data in a modular way, ideally storing most, if not all of the data I might create with the few processes I have running at any given point in time
 
 - **Monitoring Data:** Captures system metrics (e.g., performance, resource usage) and service heartbeats to track the health and operational status of homelab infrastructure.
 - **Event Data:** Records significant service-related events, offering a timeline of activities and state changes within applications.
-- **Log Data:** Centralizes application logs with various severity levels (e.g., info, warning, error), aiding in debugging and operational understanding within a personal environment.
-- **Security Data:** Gathers detailed security-related information, including access events, user session tracking, and specific actions performed within sessions. This supports auditing and custom security analysis.
+- **Log Data:** Centralizes application logs with various severity levels (e.g., info, warning, error)
+- **Security Data:** Gathers detailed security-related information, including access events, user session tracking, and specific actions performed within sessions
 - **Metadata:** Manages metadata about services to provide context and facilitate organization of collected data.
 
-The collected data is intended to be used with external visualization and analysis tools (such as Grafana, not yet integrated) to facilitate:
+## Tech Used
 
-- Real-time performance monitoring of personal systems.
-- Historical data analysis to identify trends and anomalies relevant to homelab operations.
-- Security event tracking and custom auditing.
-- Informing future hardware and software upgrade decisions for a personal server.
-- Tracking specific data from game servers and other experimental setups.
-- General tinkering and understanding the operational dynamics within a personal homelab.
+- PostgreSQL
+- Docker/Docker Compose
+- psycopg3
+- Python
+- SQL
 
 ## Planned Features
 
-This project is a personal endeavor under active development. Future enhancements and data collectors are planned to expand its capabilities for my specific needs. This section will be updated with a detailed roadmap as the project evolves.
+As of writing, this project is very much still in active development. Here's what I'm probably currently working on
 
 - [ ] Extended collecting for all the things I need collected
 - [ ] Alerts for when bad things happen (email? smoke signals?)
-- [ ] Data culling/consolidating of some sort (averaging time periods as they get further back?) to avoid filling my poor old HDD :(
-- [ ] Support for fully (or at least mostly (I'll settle for somewhat)) automated inclusion of templated containers (Minecraft servers generated with mcgen tool)
+- [ ] Data culling/consolidating of some sort (averaging metric across time periods as they get older, just delete most of the rest of it once it's not likely to be relevant) to avoid filling my poor old HDD :(
+- [ ] Use something like Grafana for data vis
+- [ ] Support for fully (or at least mostly (I'll settle for somewhat)) automated inclusion of templated containers (Minecraft servers generated with mcgen tool, etc.)
