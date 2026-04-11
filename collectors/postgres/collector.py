@@ -102,7 +102,7 @@ class PostgresCollector:
 
             time.sleep(self.interval)
 
-    def getHeartbeat(self):
+    def getHeartbeat(self) -> bool:
         try:
             with self.connection.cursor() as cur:
                 cur.execute("SELECT 1")
