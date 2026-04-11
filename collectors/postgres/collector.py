@@ -154,10 +154,15 @@ if __name__ == "__main__":
         logging.error(f"Critical Error: Could not connect to database on startup: {e}")
         sys.exit(1)
 
+    collector = None
     try:
         collector = PostgresCollector(connector=db_connector)
         collector.start()
     except KeyboardInterrupt:
         logging.info("\nShutdown signal received...")
-    finally:
-        collector.stop()
+    finally: # I don't use collector.stop() here because collector may not have been initialized
+        logging.info("Shutting down PostgreSQL Collector...")
+        if collector and collector.connection:
+             collector.connection.close()
+
+        sys.exit(0)
