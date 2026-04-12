@@ -1,6 +1,6 @@
 # Homelab Logging System
 
-Collects all kinds of data from and about my homelab Ubuntu server that I built from spare parts I've hoarded and been crouching over like a dragon in the last 12 years. The idea is that it's as modular and reliable as possible so I can easily integrate new projects quickly and easily with minimal maintenance and, soon, monitor processes and their performance, analyze security stuff, and more efficiently plan for future upgrades.
+Collects all kinds of data from and about my homelab Ubuntu Server machine that I built from spare parts I've hoarded and been crouching over like a dragon in the last 12 years. The idea is that it's as modular and reliable as possible so I can easily integrate new projects quickly and easily with minimal maintenance and, soon, monitor processes and their performance, analyze security stuff, and more efficiently plan for future upgrades.
 
 ## Data Collection
 
