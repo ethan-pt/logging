@@ -59,6 +59,9 @@ class DatabaseConnector:
 
 class DatabaseInserter:
     def registerService(self, connector, serviceName: str, serviceType: str) -> int:
+        # I return -1 on failure for this method bc the service ID is needed for all other logging methods, 
+        # so if registration fails we want to be able to easily check for that and avoid attempting to log 
+        # anything else.
         if not connector.checkConnection():
             logging.error("Cannot register service because database connection is not active.")
         
