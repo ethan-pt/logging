@@ -58,12 +58,12 @@ class DatabaseConnector:
         
 
 class DatabaseInserter:
-    def registerService(self, connector, serviceName: str, serviceType: str) -> int:
+    def registerService(self, connection, serviceName: str, serviceType: str) -> int:
         # I return -1 on failure for this method bc the service ID is needed for all other logging methods, 
         # so if registration fails we want to be able to easily check for that and avoid attempting to log 
         # anything else.
         try:
-            cur = connector.connection.cursor()
+            cur = connection.cursor()
             cur.execute("""
                 INSERT INTO metadata.service (service_name, service_type)
                 VALUES (%s, %s)
@@ -73,7 +73,7 @@ class DatabaseInserter:
             """, (serviceName, serviceType))
             row = cur.fetchone()
             serviceId = row[0]
-            connector.connection.commit()
+            connection.commit()
 
             logging.info(f"Service '{serviceName}' successfully registered with ID: {serviceId}")
 
@@ -83,10 +83,10 @@ class DatabaseInserter:
             
             return -1
     
-    def logHeartbeat(self, connector, serviceId: int, active: bool) -> None:
+    def logHeartbeat(self, connection, serviceId: int, active: bool) -> None:
         try:
             status = "active" if active == True else "inactive"
-            with connector.connection.cursor() as cur:
+            with connection.cursor() as cur:
                 cur.execute("""
                     INSERT INTO monitoring.heartbeat (service_id, status, timestamp)
                     VALUES (%s, %s, clock_timestamp())
@@ -97,13 +97,13 @@ class DatabaseInserter:
                 if heartbeatId % 5 == 0:
                     logging.info("Committing heartbeat buffer to database...")
 
-                    connector.connection.commit()
+                    connection.commit()
         except Exception as e:
             logging.error(f"Error logging heartbeat for service ID {serviceId}: {e}")
     
-    def logMetric(self, connector, serviceId: int, metricName: str, metricValue: float) -> None:
+    def logMetric(self, connection, serviceId: int, metricName: str, metricValue: float) -> None:
         try:
-            with connector.connection.cursor() as cur:
+            with connection.cursor() as cur:
                 cur.execute("""
                     INSERT INTO monitoring.metrics (service_id, metric_name, metric_value, timestamp)
                     VALUES (%s, %s, %s, clock_timestamp())
@@ -114,66 +114,66 @@ class DatabaseInserter:
                 if metricId % 5 == 0:
                     logging.info("Committing metrics buffer to database...")
 
-                    connector.connection.commit()
+                    connection.commit()
         except Exception as e:
             logging.error(f"Error logging metric '{metricName}' for service ID {serviceId}: {e}")
     
-    def logEvent(self, connector, serviceId: int, eventType: str, eventMessage: str) -> None:
+    def logEvent(self, connection, serviceId: int, eventType: str, eventMessage: str) -> None:
         try:
-            with connector.connection.cursor() as cur:
+            with connection.cursor() as cur:
                 cur.execute("""
                     INSERT INTO monitoring.events (service_id, event_type, event_message, timestamp)
                     VALUES (%s, %s, %s, clock_timestamp())
                     RETURNING id
                 """, (serviceId, eventType, eventMessage))
-                connector.connection.commit()
+                connection.commit()
         except Exception as e:
             logging.error(f"Error logging event '{eventType}' for service ID {serviceId}: {e}")
 
-    def logLog(self, connector, serviceId: int, logLevel: str, logMessage: str) -> None:
+    def logLog(self, connection, serviceId: int, logLevel: str, logMessage: str) -> None:
         try:
-            with connector.connection.cursor() as cur:
+            with connection.cursor() as cur:
                 cur.execute("""
                     INSERT INTO monitoring.logs (service_id, log_level, log_message, timestamp)
                     VALUES (%s, %s, %s, clock_timestamp())
                     RETURNING id
                 """, (serviceId, logLevel, logMessage))
-                connector.connection.commit()
+                connection.commit()
         except Exception as e:
             logging.error(f"Error logging message with level '{logLevel}' for service ID {serviceId}: {e}")
-    
-    def logAccessEvent(self, connector, serviceId: int, targetType: str, eventType: str, ipAddress: str | None, username: str | None) -> None:
+
+    def logAccessEvent(self, connection, serviceId: int, targetType: str, eventType: str, ipAddress: str | None, username: str | None) -> None:
         try:
-            with connector.connection.cursor() as cur:
+            with connection.cursor() as cur:
                 cur.execute("""
                     INSERT INTO monitoring.access_events (service_id, target_type, event_type, ip_address, username, timestamp)
                     VALUES (%s, %s, %s, %s, %s, clock_timestamp())
                     RETURNING id
                 """, (serviceId, targetType, eventType, ipAddress, username))
-                connector.connection.commit()
+                connection.commit()
         except Exception as e:
             logging.error(f"Error logging access event '{eventType}' for service ID {serviceId}: {e}")
 
-    def logSession(self, connector, serviceId: int, targetType: str, username: str | None, ipAddress: str | None) -> None:
+    def logSession(self, connection, serviceId: int, targetType: str, username: str | None, ipAddress: str | None) -> None:
         try:
-            with connector.connection.cursor() as cur:
+            with connection.cursor() as cur:
                 cur.execute("""
                     INSERT INTO monitoring.sessions (service_id, target_type, username, ip_address, timestamp)
                     VALUES (%s, %s, %s, %s, clock_timestamp())
                     RETURNING id
                 """, (serviceId, targetType, username, ipAddress))
-                connector.connection.commit()
+                connection.commit()
         except Exception as e:
             logging.error(f"Error logging session for user '{username}' on service ID {serviceId}: {e}")
 
-    def logAction(self, connector, sessionId: int, actionType: str | None, actionDescription: str | None) -> None:
+    def logAction(self, connection, sessionId: int, actionType: str | None, actionDescription: str | None) -> None:
         try:
-            with connector.connection.cursor() as cur:
+            with connection.cursor() as cur:
                 cur.execute("""
                     INSERT INTO monitoring.actions (session_id, action_type, action_description, timestamp)
                     VALUES (%s, %s, %s, clock_timestamp())
                     RETURNING id
                 """, (sessionId, actionType, actionDescription))
-                connector.connection.commit()
+                connection.commit()
         except Exception as e:
             logging.error(f"Error logging action '{actionType}' for session ID {sessionId}: {e}")   
