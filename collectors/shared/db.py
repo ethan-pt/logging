@@ -62,9 +62,6 @@ class DatabaseInserter:
         # I return -1 on failure for this method bc the service ID is needed for all other logging methods, 
         # so if registration fails we want to be able to easily check for that and avoid attempting to log 
         # anything else.
-        if not connector.checkConnection():
-            logging.error("Cannot register service because database connection is not active.")
-        
         try:
             cur = connector.connection.cursor()
             cur.execute("""
@@ -87,9 +84,6 @@ class DatabaseInserter:
             return -1
     
     def logHeartbeat(self, connector, serviceId: int, active: bool) -> None:
-        if not connector.checkConnection():
-            logging.error("Cannot log heartbeat because database connection is not active.")
-        
         try:
             status = "active" if active == True else "inactive"
             with connector.connection.cursor() as cur:
@@ -108,9 +102,6 @@ class DatabaseInserter:
             logging.error(f"Error logging heartbeat for service ID {serviceId}: {e}")
     
     def logMetric(self, connector, serviceId: int, metricName: str, metricValue: float) -> None:
-        if not connector.checkConnection():
-            logging.error("Cannot log metric because database connection is not active.")
-
         try:
             with connector.connection.cursor() as cur:
                 cur.execute("""
@@ -128,9 +119,6 @@ class DatabaseInserter:
             logging.error(f"Error logging metric '{metricName}' for service ID {serviceId}: {e}")
     
     def logEvent(self, connector, serviceId: int, eventType: str, eventMessage: str) -> None:
-        if not connector.checkConnection():
-            logging.error("Cannot log event because database connection is not active.")
-
         try:
             with connector.connection.cursor() as cur:
                 cur.execute("""
@@ -143,9 +131,6 @@ class DatabaseInserter:
             logging.error(f"Error logging event '{eventType}' for service ID {serviceId}: {e}")
 
     def logLog(self, connector, serviceId: int, logLevel: str, logMessage: str) -> None:
-        if not connector.checkConnection():
-            logging.error("Cannot log message because database connection is not active.")
-
         try:
             with connector.connection.cursor() as cur:
                 cur.execute("""
@@ -158,9 +143,6 @@ class DatabaseInserter:
             logging.error(f"Error logging message with level '{logLevel}' for service ID {serviceId}: {e}")
     
     def logAccessEvent(self, connector, serviceId: int, targetType: str, eventType: str, ipAddress: str | None, username: str | None) -> None:
-        if not connector.checkConnection():
-            logging.error("Cannot log access event because database connection is not active.")
-
         try:
             with connector.connection.cursor() as cur:
                 cur.execute("""
@@ -173,9 +155,6 @@ class DatabaseInserter:
             logging.error(f"Error logging access event '{eventType}' for service ID {serviceId}: {e}")
 
     def logSession(self, connector, serviceId: int, targetType: str, username: str | None, ipAddress: str | None) -> None:
-        if not connector.checkConnection():
-            logging.error("Cannot log session because database connection is not active.")
-
         try:
             with connector.connection.cursor() as cur:
                 cur.execute("""
@@ -188,9 +167,6 @@ class DatabaseInserter:
             logging.error(f"Error logging session for user '{username}' on service ID {serviceId}: {e}")
 
     def logAction(self, connector, sessionId: int, actionType: str | None, actionDescription: str | None) -> None:
-        if not connector.checkConnection():
-            logging.error("Cannot log action because database connection is not active.")
-
         try:
             with connector.connection.cursor() as cur:
                 cur.execute("""
