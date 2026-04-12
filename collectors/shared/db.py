@@ -86,7 +86,7 @@ class DatabaseInserter:
             
             return -1
     
-    def logHeartbeat(self, connector, serviceId: int, active: float) -> None:
+    def logHeartbeat(self, connector, serviceId: int, active: bool) -> None:
         if not connector.checkConnection():
             logging.error("Cannot log heartbeat because database connection is not active.")
         
