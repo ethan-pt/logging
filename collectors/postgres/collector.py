@@ -16,6 +16,7 @@ class PostgresCollector:
         self.interval = interval
 
         self.connector = connector
+        self.connection = connector.connection
         self.inserter = DatabaseInserter()
 
         self.serviceId = None
@@ -82,6 +83,8 @@ class PostgresCollector:
             return -1
 
     def stop(self) -> None:
+        logging.info("Shutting down PostgreSQL Collector...")
+
         if self.connection:
             self.connection.close()
 
@@ -102,9 +105,9 @@ if __name__ == "__main__":
         collector.start()
     except KeyboardInterrupt:
         logging.info("\nShutdown signal received...")
-    finally: # I don't use collector.stop() here because collector may not have been initialized
-        logging.info("Shutting down PostgreSQL Collector...")
-        if collector and collector.connection:
-             collector.connection.close()
-
-        sys.exit(0)
+    finally:
+        if collector:
+            collector.stop()
+        else:
+            logging.error("Collector failed to initialize, shutting down...")
+            sys.exit(1)
