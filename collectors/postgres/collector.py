@@ -26,7 +26,7 @@ class PostgresCollector:
     def start(self) -> None:
         logging.info("PostgreSQL Collector started. Registering service in metadata...")
 
-        self.serviceId = self.inserter.registerService(self.connector, self.serviceName, self.serviceType)
+        self.serviceId = self.inserter.registerService(self.connector.connection, self.serviceName, self.serviceType)
         if self.serviceId == -1: # I used -1 as an error code for failed registration, allowing collector to handle resolve/shutdown logic
             return
 
