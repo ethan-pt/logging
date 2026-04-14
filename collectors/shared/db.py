@@ -90,14 +90,16 @@ class DatabaseInserter:
                 cur.execute("""
                     INSERT INTO monitoring.heartbeat (service_id, status, timestamp)
                     VALUES (%s, %s, clock_timestamp())
-                    RETURNING id
                 """, (serviceId, status))
 
-                heartbeatId = cur.fetchone()[0]
-                if heartbeatId % 5 == 0:
+                counter = 0
+                if counter % 5 == 0:
                     logging.info("Committing heartbeat buffer to database...")
 
                     connection.commit()
+                    counter = 0
+                else:
+                    counter += 1
         except Exception as e:
             logging.error(f"Error logging heartbeat for service ID {serviceId}: {e}")
     
@@ -107,14 +109,16 @@ class DatabaseInserter:
                 cur.execute("""
                     INSERT INTO monitoring.metrics (service_id, metric_name, metric_value, timestamp)
                     VALUES (%s, %s, %s, clock_timestamp())
-                    RETURNING id
                 """, (serviceId, metricName, metricValue))
 
-                metricId = cur.fetchone()[0]
-                if metricId % 5 == 0:
+                counter = 0
+                if counter % 5 == 0:
                     logging.info("Committing metrics buffer to database...")
 
                     connection.commit()
+                    counter = 0
+                else:
+                    counter += 1
         except Exception as e:
             logging.error(f"Error logging metric '{metricName}' for service ID {serviceId}: {e}")
     
