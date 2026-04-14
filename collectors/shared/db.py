@@ -13,7 +13,6 @@ logging.basicConfig(
 
 class DatabaseConnector:
     def __init__(self):
-
         self.dbUser = os.getenv("POSTGRES_USER")
         self.dbPassword = os.getenv("POSTGRES_PASSWORD")
         self.dbName = os.getenv("POSTGRES_DB")
@@ -22,18 +21,23 @@ class DatabaseConnector:
         self.connection = None
 
     def connect(self) -> None:
-        try:
-            self.connection = psycopg.connect(
-                host=self.dbHost,
-                dbname=self.dbName,
-                user=self.dbUser,
-                password=self.dbPassword
-            )
+        delay = 5
+        while True:
+            try:
+                self.connection = psycopg.connect(
+                    host=self.dbHost,
+                    dbname=self.dbName,
+                    user=self.dbUser,
+                    password=self.dbPassword
+                )
 
-            logging.info("Connected to PostgreSQL database successfully.")
-            return 
-        except Exception as e:
-            logging.error(f"Failed to connect to PostgreSQL database with exception: {e}")
+                logging.info("Connected to PostgreSQL database successfully.")
+                return
+            except Exception as e:
+                logging.error(f"Failed to connect to PostgreSQL database with exception: {e}\nRetrying in {delay} seconds...")
+                
+                time.sleep(delay)
+                delay = min(delay * 2, 300)
     
     def checkConnection(self) -> bool:
         if not self.connection:
