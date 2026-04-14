@@ -12,8 +12,7 @@ logging.basicConfig(
 
 
 class DatabaseConnector:
-    def __init__(self, retries=5):
-        self.retries = retries
+    def __init__(self):
 
         self.dbUser = os.getenv("POSTGRES_USER")
         self.dbPassword = os.getenv("POSTGRES_PASSWORD")
@@ -23,24 +22,18 @@ class DatabaseConnector:
         self.connection = None
 
     def connect(self) -> None:
-        for i in range(self.retries):
-            try:
-                self.connection = psycopg.connect(
-                    host=self.dbHost,
-                    dbname=self.dbName,
-                    user=self.dbUser,
-                    password=self.dbPassword
-                )
+        try:
+            self.connection = psycopg.connect(
+                host=self.dbHost,
+                dbname=self.dbName,
+                user=self.dbUser,
+                password=self.dbPassword
+            )
 
-                logging.info("Connected to PostgreSQL database successfully.")
-                return 
-            except Exception as e:
-                logging.error(f"Failed to connect to PostgreSQL database with exception: {e}\nRetrying in 5 seconds... ({i + 1}/{self.retries})")
-                
-                time.sleep(5)
-        
-        logging.error("Exceeded maximum retries. Shutting down...")
-        sys.exit(1)
+            logging.info("Connected to PostgreSQL database successfully.")
+            return 
+        except Exception as e:
+            logging.error(f"Failed to connect to PostgreSQL database with exception: {e}")
     
     def checkConnection(self) -> bool:
         if not self.connection:
