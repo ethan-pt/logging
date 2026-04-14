@@ -35,11 +35,13 @@ class PostgresCollector:
             if self.connector.checkConnection():
                 self.inserter.logHeartbeat(self.connector.connection, self.serviceId, self.getHeartbeat())
 
-                if self.getConnections() != -1: # Only log active connections if we were able to get a valid count
-                    self.inserter.logMetric(self.connector.connection, self.serviceId, "active_connections", self.getConnections())
+                connections = self.getConnections()
+                if connections != -1: # Only log active connections if we were able to get a valid count
+                    self.inserter.logMetric(self.connector.connection, self.serviceId, "active_connections", connections)
 
-                if self.getDatabaseSize() != -1: # Only log database size if we were able to get a valid size
-                    self.inserter.logMetric(self.connector.connection, self.serviceId, "database_size_bytes", self.getDatabaseSize())
+                databaseSize = self.getDatabaseSize()
+                if databaseSize != -1: # Only log database size if we were able to get a valid size
+                    self.inserter.logMetric(self.connector.connection, self.serviceId, "database_size_bytes", databaseSize)
             else:
                 logging.warning("Heartbeat failed, attempting to reconnect to database...")
                 self.connector.connect()
