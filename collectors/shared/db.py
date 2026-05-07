@@ -65,6 +65,9 @@ class DatabaseConnector:
         
 
 class DatabaseInserter:
+    def __init__(self):
+        self.commit_interval = 5
+
     def registerService(self, connection, serviceName: str, serviceType: str) -> int:
         # I return -1 on failure for this method bc the service ID is needed for all other logging methods, 
         # so if registration fails we want to be able to easily check for that and avoid attempting to log 
@@ -100,7 +103,7 @@ class DatabaseInserter:
                 """, (serviceId, status))
 
                 counter = 0
-                if counter % 5 == 0:
+                if counter % self.commit_interval == 0:
                     logging.info("Committing heartbeat buffer to database...")
 
                     connection.commit()
@@ -119,7 +122,7 @@ class DatabaseInserter:
                 """, (serviceId, metricName, metricValue))
 
                 counter = 0
-                if counter % 5 == 0:
+                if counter % self.commit_interval == 0:
                     logging.info("Committing metrics buffer to database...")
 
                     connection.commit()
