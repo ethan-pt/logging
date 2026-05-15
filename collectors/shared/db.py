@@ -18,13 +18,11 @@ class DatabaseConnector:
         self.dbName = os.getenv("POSTGRES_DB")
         self.dbHost = os.getenv("POSTGRES_HOST")
 
-        self.connection = None
-
-    def connect(self) -> None:
+    def connect(self) -> psycopg.Connection:
         delay = 5
         while True:
             try:
-                self.connection = psycopg.connect(
+                connection = psycopg.connect(
                     host=self.dbHost,
                     dbname=self.dbName,
                     user=self.dbUser,
@@ -32,20 +30,20 @@ class DatabaseConnector:
                 )
 
                 logging.info("Connected to PostgreSQL database successfully.")
-                return
+                return connection
             except Exception as e:
                 logging.error(f"Failed to connect to PostgreSQL database with exception: {e}\nRetrying in {delay} seconds...")
                 
                 time.sleep(delay)
                 delay = min(delay * 2, 300)
     
-    def checkConnection(self) -> bool:
-        if not self.connection:
+    def checkConnection(self, connection) -> bool:
+        if not connection:
             logging.warning("Attempted to check connection, but no active connection found.")
 
             return False
         try:
-            with self.connection.cursor() as cur:
+            with connection.cursor() as cur:
                 cur.execute("SELECT 1")
 
                 return True
@@ -53,10 +51,10 @@ class DatabaseConnector:
             logging.error(f"Database connection check failed with exception: {e}")
             return False
     
-    def disconnect(self) -> None:
-        if self.connection:
+    def disconnect(self, connection) -> None:
+        if connection:
             try:
-                self.connection.close()
+                connection.close()
                 logging.info("Disconnected from PostgreSQL database successfully.")
             except Exception as e:
                 logging.error(f"Error disconnecting from PostgreSQL database: {e}")
