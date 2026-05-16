@@ -132,7 +132,7 @@ class DatabaseInserter:
 
                 counter = 0
                 if counter == self.commit_interval:
-                    logging.info("Committing metrics buffer to database...")
+                    logging.info(f"Committing metric '{metricName}' buffer to database...")
 
                     connection.commit()
                     counter = 0
