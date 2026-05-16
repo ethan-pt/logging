@@ -24,26 +24,29 @@ class PostgresCollector:
         self.serviceType = 'database'
 
     def start(self) -> None:
-        logging.info("PostgreSQL Collector started. Registering service in metadata...")
+        logging.info("PostgreSQL Collector started...")
 
-        self.serviceId = self.inserter.registerService(self.connector.connection, self.serviceName, self.serviceType)
+        self.connector.connect()
+
+        self.serviceId = self.inserter.registerService(self.connection, self.serviceName, self.serviceType)
         if self.serviceId == -1: # I used -1 as an error code for failed registration, allowing collector to handle resolve/shutdown logic
             return
 
         while True:
             # Checks connection before attempting to log anything, attempting to reconnect on failure.
-            if self.connector.checkConnection():
-                self.inserter.logHeartbeat(self.connector.connection, self.serviceId, self.getHeartbeat())
+            if self.connector.checkConnection(self.connection):
+                self.inserter.logHeartbeat(self.connection, self.serviceId, self.getHeartbeat())
 
                 connections = self.getConnections()
                 if connections != -1: # Only log active connections if we were able to get a valid count
-                    self.inserter.logMetric(self.connector.connection, self.serviceId, "active_connections", connections)
+                    self.inserter.logMetric(self.connection, self.serviceId, "active_connections", connections)
 
                 databaseSize = self.getDatabaseSize()
                 if databaseSize != -1: # Only log database size if we were able to get a valid size
-                    self.inserter.logMetric(self.connector.connection, self.serviceId, "database_size_bytes", databaseSize)
+                    self.inserter.logMetric(self.connection, self.serviceId, "database_size_bytes", databaseSize)
             else:
                 logging.warning("Heartbeat failed, attempting to reconnect to database...")
+                self.connector.disconnect(self.connection)
                 self.connector.connect()
                 self.connection = self.connector.connection
 
@@ -88,7 +91,7 @@ class PostgresCollector:
         logging.info("Shutting down PostgreSQL Collector...")
 
         if self.connection:
-            self.connection.close()
+            self.connector.disconnect(self.connection)
 
         sys.exit(0)
 
@@ -103,7 +106,7 @@ if __name__ == "__main__":
 
     collector = None
     try:
-        collector = PostgresCollector(connector=db_connector)
+        collector = PostgresCollector(connector=DatabaseConnector())
         collector.start()
     except KeyboardInterrupt:
         logging.info("\nShutdown signal received...")
