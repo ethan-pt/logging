@@ -51,7 +51,7 @@ class DatabaseConnector:
             logging.error(f"Database connection check failed with exception: {e}")
             return False
     
-    def disconnect(self, connection) -> None:
+    def disconnect(self, connection) -> None: #TODO: Add additional cleanup (commit buffered inserts, etc) if needed before shutdown
         try:
             connection.close()
             logging.info("Disconnected from PostgreSQL database successfully.")
