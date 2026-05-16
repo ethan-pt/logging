@@ -52,14 +52,11 @@ class DatabaseConnector:
             return False
     
     def disconnect(self, connection) -> None:
-        if connection:
-            try:
-                connection.close()
-                logging.info("Disconnected from PostgreSQL database successfully.")
-            except Exception as e:
-                logging.error(f"Error disconnecting from PostgreSQL database: {e}")
-        else:
-            logging.warning("Attempted to disconnect, but no active connection found.")
+        try:
+            connection.close()
+            logging.info("Disconnected from PostgreSQL database successfully.")
+        except Exception as e:
+            logging.error(f"Error disconnecting from PostgreSQL database: {e}")
         
 
 class DatabaseInserter:
