@@ -105,7 +105,7 @@ class DatabaseInserter:
                 """, (serviceId, status))
 
                 counter = 0
-                if counter % self.commit_interval == 0:
+                if counter == self.commit_interval:
                     logging.info("Committing heartbeat buffer to database...")
 
                     connection.commit()
@@ -131,7 +131,7 @@ class DatabaseInserter:
                 """, (serviceId, metricName, metricValue))
 
                 counter = 0
-                if counter % self.commit_interval == 0:
+                if counter == self.commit_interval:
                     logging.info("Committing metrics buffer to database...")
 
                     connection.commit()
