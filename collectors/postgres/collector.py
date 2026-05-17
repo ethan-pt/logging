@@ -121,11 +121,6 @@ if __name__ == "__main__":
 
             time.sleep(delay)
             delay = min(delay * 2, 600) # Exponential backoff with a max delay of 10 minutes
-            continue
-        
-        finally:
-            if collector:
-                collector.stop()
-            else:
-                logging.error("Collector failed to initialize, shutting down...")
-                sys.exit(1)
+
+        else:
+            delay = 5
