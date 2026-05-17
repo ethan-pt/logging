@@ -98,7 +98,6 @@ class PostgresCollector:
 
 if __name__ == "__main__":
     delay = 5
-    
     while True:
         collector = None
         try:
