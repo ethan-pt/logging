@@ -112,12 +112,12 @@ class DatabaseInserter:
                     VALUES (%s, %s, clock_timestamp())
                 """, (serviceId, status))
 
-                counter = 0
+                counter = 1
                 if counter == self.commit_interval:
                     logging.info("Committing heartbeat buffer to database...")
 
                     connection.commit()
-                    counter = 0
+                    counter = 1
                 else:
                     counter += 1
         except Exception as e:
@@ -138,12 +138,12 @@ class DatabaseInserter:
                     VALUES (%s, %s, %s, clock_timestamp())
                 """, (serviceId, metricName, metricValue))
 
-                counter = 0
+                counter = 1
                 if counter == self.commit_interval:
                     logging.info(f"Committing metric '{metricName}' buffer to database...")
 
                     connection.commit()
-                    counter = 0
+                    counter = 1
                 else:
                     counter += 1
         except Exception as e:
