@@ -25,11 +25,14 @@ class PostgresCollector:
 
     def start(self) -> None:
         logging.info("PostgreSQL Collector started...")
+        try:
+            self.connector.connect()
+            self.serviceId = self.inserter.registerService(self.connection, self.serviceName, self.serviceType)
+            if self.serviceId == -1:
+                return
 
-        self.connector.connect()
-
-        self.serviceId = self.inserter.registerService(self.connection, self.serviceName, self.serviceType)
-        if self.serviceId == -1: # I used -1 as an error code for failed registration, allowing collector to handle resolve/shutdown logic
+        except Exception as e:
+            logging.error(f"Failed to connect to database: {e}")
             return
 
         while True:
