@@ -97,22 +97,33 @@ class PostgresCollector:
 
 
 if __name__ == "__main__":
-    try:
-        db_connector = DatabaseConnector()
-        db_connector.connect()
-    except Exception as e:
-        logging.error(f"Critical Error: Could not connect to database on startup: {e}")
-        sys.exit(1)
+    delay = 5
+    
+    while True:
+        collector = None
+        try:
+            collector = PostgresCollector(connector=DatabaseConnector())
+            collector.start()
 
-    collector = None
-    try:
-        collector = PostgresCollector(connector=DatabaseConnector())
-        collector.start()
-    except KeyboardInterrupt:
-        logging.info("\nShutdown signal received...")
-    finally:
-        if collector:
-            collector.stop()
-        else:
-            logging.error("Collector failed to initialize, shutting down...")
-            sys.exit(1)
+        except KeyboardInterrupt:
+            logging.info("\nShutdown signal received...")
+            if collector:
+                collector.stop()
+            else:
+                logging.error("Collector failed to initialize, shutting down...")
+                sys.exit(1)
+
+        except Exception as e:
+            logging.error(f"Collector encountered an error: {e}")
+            logging.info(f"Attempting to restart collector in {delay} seconds...")
+
+            time.sleep(delay)
+            delay = min(delay * 2, 600) # Exponential backoff with a max delay of 10 minutes
+            continue
+        
+        finally:
+            if collector:
+                collector.stop()
+            else:
+                logging.error("Collector failed to initialize, shutting down...")
+                sys.exit(1)
