@@ -29,6 +29,8 @@ class PostgresCollector:
             self.connector.connect()
             self.serviceId = self.inserter.registerService(self.connection, self.serviceName, self.serviceType)
             if self.serviceId == -1:
+                if self.connection:
+                    self.connector.disconnect(self.connection)
                 return
 
         except Exception as e:
