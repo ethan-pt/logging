@@ -160,7 +160,7 @@ class DatabaseInserter:
         try:
             with connection.cursor() as cur:
                 cur.execute("""
-                    INSERT INTO events.service_event (service_id, event_type, event_message, timestamp)
+                    INSERT INTO events.service_event (service_id, event_type, message, timestamp)
                     VALUES (%s, %s, %s, clock_timestamp())
                     RETURNING id
                 """, (serviceId, eventType, eventMessage))
@@ -179,7 +179,7 @@ class DatabaseInserter:
         try:
             with connection.cursor() as cur:
                 cur.execute("""
-                    INSERT INTO logs.service_log (service_id, log_level, log_message, timestamp)
+                    INSERT INTO logs.service_log (service_id, level, message, timestamp)
                     VALUES (%s, %s, %s, clock_timestamp())
                     RETURNING id
                 """, (serviceId, logLevel, logMessage))
@@ -217,7 +217,7 @@ class DatabaseInserter:
         try:
             with connection.cursor() as cur:
                 cur.execute("""
-                    INSERT INTO security.session (service_id, target_type, username, ip_address, timestamp)
+                    INSERT INTO security.session (service_id, target_type, username, ip_address, started_at)
                     VALUES (%s, %s, %s, %s, clock_timestamp())
                     RETURNING id
                 """, (serviceId, targetType, username, ipAddress))
@@ -236,7 +236,7 @@ class DatabaseInserter:
         try:
             with connection.cursor() as cur:
                 cur.execute("""
-                    INSERT INTO security.action (session_id, action_type, action_description, timestamp)
+                    INSERT INTO security.action (session_id, action_type, description, timestamp)
                     VALUES (%s, %s, %s, clock_timestamp())
                     RETURNING id
                 """, (sessionId, actionType, actionDescription))
