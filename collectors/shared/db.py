@@ -68,9 +68,6 @@ class DatabaseConnector:
         
 
 class DatabaseInserter:
-    def __init__(self):
-        self.commit_interval = 5
-
     def registerService(self, connection, serviceName: str, serviceType: str) -> int:
         # I return -1 on failure for this method bc the service ID is needed for all other logging methods, 
         # so if registration fails we want to be able to easily check for that and avoid attempting to log 
@@ -111,15 +108,7 @@ class DatabaseInserter:
                     INSERT INTO monitoring.heartbeat (service_id, status, timestamp)
                     VALUES (%s, %s, clock_timestamp())
                 """, (serviceId, status))
-
-                counter = 1
-                if counter == self.commit_interval:
-                    logging.info("Committing heartbeat buffer to database...")
-
-                    connection.commit()
-                    counter = 1
-                else:
-                    counter += 1
+                connection.commit()
         except Exception as e:
             logging.error(f"Error logging heartbeat for service ID {serviceId}: {e}")
 
@@ -137,15 +126,7 @@ class DatabaseInserter:
                     INSERT INTO monitoring.metrics (service_id, metric_name, metric_value, timestamp)
                     VALUES (%s, %s, %s, clock_timestamp())
                 """, (serviceId, metricName, metricValue))
-
-                counter = 1
-                if counter == self.commit_interval:
-                    logging.info(f"Committing metric '{metricName}' buffer to database...")
-
-                    connection.commit()
-                    counter = 1
-                else:
-                    counter += 1
+                connection.commit()
         except Exception as e:
             logging.error(f"Error logging metric '{metricName}' for service ID {serviceId}: {e}")
 
