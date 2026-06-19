@@ -1,10 +1,10 @@
 # Homelab Logging System
 
-Collects all kinds of data from and about my homelab Ubuntu Server machine that I built from spare parts I've hoarded and been crouching over like a dragon in the last 12 years. The idea is that it's as modular and reliable as possible so I can easily integrate new projects quickly and easily with minimal maintenance and, soon, monitor processes and their performance, analyze security stuff, and more efficiently plan for future upgrades.
+A centralized loggins and observability(soon™) platform for all kinds of data from and about my homelab Ubuntu Server and any other project I buid that interacts with it. The idea is that it's as modular and reliable as possible so I can easily integrate new projects with minimal maintenance and monitor processes, their performance, analyze security stuff, and more efficiently plan for future hardware upgrades depending on how this all grows.
 
 ## Data Collection
 
-The system is structured to collect all kinds of data in a modular way, ideally storing most, if not all of the data I might create with the few processes I have running at any given point in time
+The system is structured to collect all kinds of data in a modular way, ideally storing most, if not all of the data I might create with the processes I have running at any given point in time
 
 - **Monitoring Data:** Captures system metrics (e.g., performance, resource usage) and service heartbeats to track the health and operational status of homelab infrastructure.
 - **Event Data:** Records significant service-related events, offering a timeline of activities and state changes within applications.
@@ -22,7 +22,7 @@ The system is structured to collect all kinds of data in a modular way, ideally 
 
 ## Planned Features
 
-As of writing, this project is very much still in active development. Here's what I'm probably currently working on
+As of writing, this project is very much still in active development. Here's what I'm probably working on right now.
 
 - [ ] Extended collecting for all the things I need collected
 - [ ] Alerts for when bad things happen (email? smoke signals?)
