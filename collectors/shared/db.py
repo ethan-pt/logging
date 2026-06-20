@@ -195,7 +195,7 @@ class DatabaseInserter:
             except Exception as rollback_error:
                 logging.error(f"Error rolling back transaction after failed access event log: {rollback_error}")
 
-    def logSession(self, connection, serviceId: int, targetType: str, username: str | None, ipAddress: str | None) -> None:
+    def logSession(self, connection, serviceId: int, targetType: str, username: str | None, ipAddress: str | None) -> int:
         try:
             with connection.cursor() as cur:
                 cur.execute("""
@@ -203,7 +203,10 @@ class DatabaseInserter:
                     VALUES (%s, %s, %s, %s, clock_timestamp())
                     RETURNING id
                 """, (serviceId, targetType, username, ipAddress))
+                sessionId = cur.fetchone()[0]
                 connection.commit()
+
+                return sessionId
         except Exception as e:
             logging.error(f"Error logging session for user '{username}' on service ID {serviceId}: {e}")
 
@@ -213,6 +216,8 @@ class DatabaseInserter:
                 logging.info("Successfully rolled back transaction after failed session log.")
             except Exception as rollback_error:
                 logging.error(f"Error rolling back transaction after failed session log: {rollback_error}")
+
+            return -1
 
     def logAction(self, connection, sessionId: int, actionType: str | None, actionDescription: str | None) -> None:
         try:
