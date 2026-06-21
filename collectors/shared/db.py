@@ -19,32 +19,25 @@ class DatabaseConnector:
         self.dbHost = os.getenv("POSTGRES_HOST")
 
     def connect(self) -> psycopg.Connection:
-        delay = 5
-        while True:
-            if not all([self.dbUser, self.dbPassword, self.dbName, self.dbHost]):
-                logging.error("Database connection parameters are not fully set. Please ensure POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB, and POSTGRES_HOST environment variables are all set.")
-                logging.info(f"Retrying database connection in {delay} seconds...")
-                
-                time.sleep(delay)
-                delay = min(delay * 2, 300)
-                continue
+        if not all([self.dbUser, self.dbPassword, self.dbName, self.dbHost]):
+            logging.exception("Database connection parameters are not fully set. Please ensure POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB, and POSTGRES_HOST environment variables are all set.")
+            raise ValueError("Database connection parameters are not fully set.")
 
-            try:
-                connection = psycopg.connect(
-                    host=self.dbHost,
-                    dbname=self.dbName,
-                    user=self.dbUser,
-                    password=self.dbPassword
-                )
+        try:
+            connection = psycopg.connect(
+                host=self.dbHost,
+                dbname=self.dbName,
+                user=self.dbUser,
+                password=self.dbPassword,
+                autocommit=True
+            )
 
-                logging.info("Connected to PostgreSQL database successfully.")
-                return connection
-            except Exception as e:
-                logging.error(f"Failed to connect to PostgreSQL database with exception: {e}\nRetrying in {delay} seconds...")
-                
-                time.sleep(delay)
-                delay = min(delay * 2, 300)
-    
+            logging.info("Connected to PostgreSQL database successfully.")
+            return connection
+        except Exception as e:
+            logging.exception("Failed to connect to PostgreSQL database with exception: {e}")
+            raise
+
     def checkConnection(self, connection) -> bool:
         if not connection:
             logging.warning("Attempted to check connection, but no active connection found.")
