@@ -60,8 +60,10 @@ class PostgresCollector:
             time.sleep(self.interval)
 
     def getHeartbeat(self) -> bool:
+        connection = self.getConnection()
+
         try:
-            with self.connection.cursor() as cur:
+            with connection.cursor() as cur:
                 cur.execute("SELECT 1")
 
             return True
@@ -71,28 +73,41 @@ class PostgresCollector:
             return False
 
     def getConnections(self) -> int | None:
-        try:
-            with self.connection.cursor() as cur:
-                cur.execute("SELECT count(*) FROM pg_stat_activity")
-                count = cur.fetchone()[0]
+        connection = self.getConnection()
 
-            return count
+        try:
+            with connection.cursor() as cur:
+                cur.execute("SELECT count(*) FROM pg_stat_activity")
+                count = cur.fetchone()
+                if count is None:
+                    raise RuntimeError("Connection count query returned no row.")
+
+            return count[0]
         except psycopg.Error as e:
             logging.error(f"Error checking database connections: {e}")
 
             return None
     
     def getDatabaseSize(self) -> int | None:
-        try:
-            with self.connection.cursor() as cur:
-                cur.execute("SELECT pg_database_size(current_database())")
-                size = cur.fetchone()[0]
+        connection = self.getConnection()
 
-            return size
+        try:
+            with connection.cursor() as cur:
+                cur.execute("SELECT pg_database_size(current_database())")
+                size = cur.fetchone()
+                if size is None:
+                    raise RuntimeError("Database size query returned no row.")
+
+            return size[0]
         except psycopg.Error as e:
             logging.error(f"Error checking database size: {e}")
 
             return None
+        
+    def getConnection(self) -> psycopg.Connection:
+        if self.connection is None:
+            raise RuntimeError("No active database connection.")
+        return self.connection
 
     def stop(self) -> None:
         logging.info("Shutting down PostgreSQL Collector...")
