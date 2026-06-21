@@ -23,10 +23,13 @@ class PostgresCollector:
         self.serviceName = 'postgres'
         self.serviceType = 'database'
 
+        self.stableSince = None
+
     def start(self) -> None:
         logging.info("PostgreSQL Collector started...")
 
         self.connection = self.connector.connect()
+        self.stableSince = time.time()
         
         with self.connection.transaction(): # Register service if not registered, update if necessary
             self.serviceId = self.inserter.registerService(self.connection, self.serviceName, self.serviceType)
@@ -99,11 +102,14 @@ class PostgresCollector:
 
 
 if __name__ == "__main__":
-    delay = 5
+    initialDelay = 5
+    maxDelay = 600 # 10 minutes
+    stableThreshold = 300  # 5 minutes
+    delay = initialDelay
+
     while True:
-        collector = None
+        collector = PostgresCollector(connector=DatabaseConnector())
         try:
-            collector = PostgresCollector(connector=DatabaseConnector())
             collector.start()
 
         except KeyboardInterrupt:
@@ -111,14 +117,14 @@ if __name__ == "__main__":
             break
 
         except Exception:
+            if collector.stableSince is not None and time.time() - collector.stableSince >= stableThreshold:
+                delay = initialDelay
+                collector.stableSince = None
+
             logging.info(f"Attempting to restart collector in {delay} seconds...")
 
             time.sleep(delay)
-            delay = min(delay * 2, 600) # Exponential backoff with a max delay of 10 minutes
+            delay = min(delay * 2, maxDelay)
 
-        else:
-            delay = 5
-        
         finally:
-            if collector:
-                collector.stop()
+            collector.stop()
