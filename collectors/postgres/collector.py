@@ -1,6 +1,7 @@
 import sys
 import time
 import logging
+import psycopg.errors
 
 from shared.db import DatabaseConnector, DatabaseInserter
 
@@ -43,10 +44,10 @@ class PostgresCollector:
                 with self.connection.transaction():
                     self.inserter.logHeartbeat(self.connection, self.serviceId, heartbeat)
 
-                    if connections != -1: # Only log active connections if we were able to get a valid count
+                    if connections is not None:
                         self.inserter.logMetric(self.connection, self.serviceId, "active_connections", connections)
 
-                    if databaseSize != -1: # Only log database size if we were able to get a valid size
+                    if databaseSize is not None:
                         self.inserter.logMetric(self.connection, self.serviceId, "database_size_bytes", databaseSize)
             else:
                 logging.warning("Database connection failed, attempting to reconnect to database...")
@@ -64,34 +65,34 @@ class PostgresCollector:
                 cur.execute("SELECT 1")
 
             return True
-        except Exception as e:
+        except psycopg.Error as e:
             logging.error(f"Error checking database heartbeat: {e}")
 
             return False
 
-    def getConnections(self) -> int:
+    def getConnections(self) -> int | None:
         try:
             with self.connection.cursor() as cur:
                 cur.execute("SELECT count(*) FROM pg_stat_activity")
                 count = cur.fetchone()[0]
 
             return count
-        except Exception as e:
+        except psycopg.Error as e:
             logging.error(f"Error checking database connections: {e}")
 
-            return -1
+            return None
     
-    def getDatabaseSize(self) -> int:
+    def getDatabaseSize(self) -> int | None:
         try:
             with self.connection.cursor() as cur:
                 cur.execute("SELECT pg_database_size(current_database())")
                 size = cur.fetchone()[0]
 
             return size
-        except Exception as e:
+        except psycopg.Error as e:
             logging.error(f"Error checking database size: {e}")
 
-            return -1
+            return None
 
     def stop(self) -> None:
         logging.info("Shutting down PostgreSQL Collector...")
