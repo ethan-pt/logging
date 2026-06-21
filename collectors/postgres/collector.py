@@ -97,8 +97,7 @@ class PostgresCollector:
 
         if self.connection:
             self.connector.disconnect(self.connection)
-
-        sys.exit(0)
+            self.connection = None
 
 
 if __name__ == "__main__":
@@ -111,14 +110,9 @@ if __name__ == "__main__":
 
         except KeyboardInterrupt:
             logging.info("\nShutdown signal received...")
-            if collector:
-                collector.stop()
-            else:
-                logging.error("Collector failed to initialize, shutting down...")
-                sys.exit(1)
+            break
 
-        except Exception as e:
-            logging.error(f"Collector encountered an error: {e}")
+        except Exception:
             logging.info(f"Attempting to restart collector in {delay} seconds...")
 
             time.sleep(delay)
@@ -126,3 +120,7 @@ if __name__ == "__main__":
 
         else:
             delay = 5
+        
+        finally:
+            if collector:
+                collector.stop()
