@@ -23,20 +23,16 @@ class DatabaseConnector:
             logging.exception("Database connection parameters are not fully set. Please ensure POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB, and POSTGRES_HOST environment variables are all set.")
             raise ValueError("Database connection parameters are not fully set.")
 
-        try:
-            connection = psycopg.connect(
-                host=self.dbHost,
-                dbname=self.dbName,
-                user=self.dbUser,
-                password=self.dbPassword,
-                autocommit=True
-            )
+        connection = psycopg.connect(
+            host=self.dbHost,
+            dbname=self.dbName,
+            user=self.dbUser,
+            password=self.dbPassword,
+            autocommit=True
+        )
 
-            logging.info("Connected to PostgreSQL database successfully.")
-            return connection
-        except Exception as e:
-            logging.exception("Failed to connect to PostgreSQL database with exception: {e}")
-            raise
+        logging.info("Connected to PostgreSQL database successfully.")
+        return connection
 
     def checkConnection(self, connection) -> bool:
         if not connection:
