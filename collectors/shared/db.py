@@ -78,8 +78,8 @@ class DatabaseInserter:
                 INSERT INTO metadata.service (service_name, service_type)
                 VALUES (%s, %s)
                 ON CONFLICT (service_name) DO UPDATE 
-                SET service_name = EXCLUDED.service_name
-                SET service_type = EXCLUDED.service_type
+                SET service_name = EXCLUDED.service_name,
+                    service_type = EXCLUDED.service_type
                 RETURNING id
             """, (serviceName, serviceType))
             row = cur.fetchone()
