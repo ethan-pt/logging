@@ -117,7 +117,8 @@ if __name__ == "__main__":
             logging.info("\nShutdown signal received...")
             break
 
-        except Exception:
+        except Exception as e:
+            logging.exception(f"An error occurred while running the PostgreSQL Collector: {e}")
             if collector.stableSince is not None and time.time() - collector.stableSince >= stableThreshold:
                 delay = initialDelay
                 collector.stableSince = None

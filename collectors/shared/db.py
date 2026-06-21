@@ -75,86 +75,59 @@ class DatabaseInserter:
             raise
     
     def logHeartbeat(self, connection, serviceId: int, active: bool) -> None:
-        try:
-            status = "active" if active == True else "inactive"
-            with connection.cursor() as cur:
-                cur.execute("""
-                    INSERT INTO monitoring.heartbeat (service_id, status, timestamp)
-                    VALUES (%s, %s, clock_timestamp())
-                """, (serviceId, status))
-        except Exception as e:
-            logging.exception(f"Error logging heartbeat for service ID {serviceId}: {e}")
-            raise
+        status = "active" if active == True else "inactive"
+        with connection.cursor() as cur:
+            cur.execute("""
+                INSERT INTO monitoring.heartbeat (service_id, status, timestamp)
+                VALUES (%s, %s, clock_timestamp())
+            """, (serviceId, status))
 
     def logMetric(self, connection, serviceId: int, metricName: str, metricValue: float) -> None:
-        try:
-            with connection.cursor() as cur:
-                cur.execute("""
-                    INSERT INTO monitoring.metrics (service_id, metric_name, metric_value, timestamp)
-                    VALUES (%s, %s, %s, clock_timestamp())
-                """, (serviceId, metricName, metricValue))
-        except Exception as e:
-            logging.exception(f"Error logging metric '{metricName}' for service ID {serviceId}: {e}")
-            raise
+        with connection.cursor() as cur:
+            cur.execute("""
+                INSERT INTO monitoring.metrics (service_id, metric_name, metric_value, timestamp)
+                VALUES (%s, %s, %s, clock_timestamp())
+            """, (serviceId, metricName, metricValue))
 
     def logEvent(self, connection, serviceId: int, eventType: str, eventMessage: str) -> None:
-        try:
-            with connection.cursor() as cur:
-                cur.execute("""
-                    INSERT INTO events.service_event (service_id, event_type, message, timestamp)
-                    VALUES (%s, %s, %s, clock_timestamp())
-                    RETURNING id
-                """, (serviceId, eventType, eventMessage))
-        except Exception as e:
-            logging.exception(f"Error logging event '{eventType}' for service ID {serviceId}: {e}")
-            raise
+        with connection.cursor() as cur:
+            cur.execute("""
+                INSERT INTO events.service_event (service_id, event_type, message, timestamp)
+                VALUES (%s, %s, %s, clock_timestamp())
+                RETURNING id
+            """, (serviceId, eventType, eventMessage))
+            return cur.fetchone()[0]
 
     def logLog(self, connection, serviceId: int, logLevel: str, logMessage: str) -> None:
-        try:
-            with connection.cursor() as cur:
-                cur.execute("""
-                    INSERT INTO logs.service_log (service_id, level, message, timestamp)
-                    VALUES (%s, %s, %s, clock_timestamp())
-                    RETURNING id
-                """, (serviceId, logLevel, logMessage))
-        except Exception as e:
-            logging.exception(f"Error logging message with level '{logLevel}' for service ID {serviceId}: {e}")
-            raise
+        with connection.cursor() as cur:
+            cur.execute("""
+                INSERT INTO logs.service_log (service_id, level, message, timestamp)
+                VALUES (%s, %s, %s, clock_timestamp())
+                RETURNING id
+            """, (serviceId, logLevel, logMessage))
 
     def logAccessEvent(self, connection, serviceId: int, targetType: str, eventType: str, ipAddress: str | None, username: str | None) -> None:
-        try:
-            with connection.cursor() as cur:
-                cur.execute("""
-                    INSERT INTO security.access_event (service_id, target_type, event_type, ip_address, username, timestamp)
-                    VALUES (%s, %s, %s, %s, %s, clock_timestamp())
-                    RETURNING id
-                """, (serviceId, targetType, eventType, ipAddress, username))
-        except Exception as e:
-            logging.exception(f"Error logging access event '{eventType}' for service ID {serviceId}: {e}")
-            raise
+        with connection.cursor() as cur:
+            cur.execute("""
+                INSERT INTO security.access_event (service_id, target_type, event_type, ip_address, username, timestamp)
+                VALUES (%s, %s, %s, %s, %s, clock_timestamp())
+                RETURNING id
+            """, (serviceId, targetType, eventType, ipAddress, username))
 
     def logSession(self, connection, serviceId: int, targetType: str, username: str | None, ipAddress: str | None) -> int:
-        try:
-            with connection.cursor() as cur:
-                cur.execute("""
-                    INSERT INTO security.session (service_id, target_type, username, ip_address, started_at)
-                    VALUES (%s, %s, %s, %s, clock_timestamp())
-                    RETURNING id
-                """, (serviceId, targetType, username, ipAddress))
-                sessionId = cur.fetchone()[0]
-                return sessionId
-        except Exception as e:
-            logging.exception(f"Error logging session for user '{username}' on service ID {serviceId}: {e}")
-            raise
+        with connection.cursor() as cur:
+            cur.execute("""
+                INSERT INTO security.session (service_id, target_type, username, ip_address, started_at)
+                VALUES (%s, %s, %s, %s, clock_timestamp())
+                RETURNING id
+            """, (serviceId, targetType, username, ipAddress))
+            sessionId = cur.fetchone()[0]
+            return sessionId
 
     def logAction(self, connection, sessionId: int, actionType: str | None, actionDescription: str | None) -> None:
-        try:
-            with connection.cursor() as cur:
-                cur.execute("""
-                    INSERT INTO security.action (session_id, action_type, description, timestamp)
-                    VALUES (%s, %s, %s, clock_timestamp())
-                    RETURNING id
-                """, (sessionId, actionType, actionDescription))
-        except Exception as e:
-            logging.exception(f"Error logging action '{actionType}' for session ID {sessionId}: {e}")
-            raise
+        with connection.cursor() as cur:
+            cur.execute("""
+                INSERT INTO security.action (session_id, action_type, description, timestamp)
+                VALUES (%s, %s, %s, clock_timestamp())
+                RETURNING id
+            """, (sessionId, actionType, actionDescription))
