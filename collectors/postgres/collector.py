@@ -16,7 +16,7 @@ class PostgresCollector:
         self.interval = interval
 
         self.connector = connector
-        self.connection = connector.connection
+        self.connection = None
         self.inserter = DatabaseInserter()
 
         self.serviceId = None
@@ -25,35 +25,33 @@ class PostgresCollector:
 
     def start(self) -> None:
         logging.info("PostgreSQL Collector started...")
-        try:
-            self.connector.connect()
-            self.serviceId = self.inserter.registerService(self.connection, self.serviceName, self.serviceType)
-            if self.serviceId == -1:
-                if self.connection:
-                    self.connector.disconnect(self.connection)
-                return
 
-        except Exception as e:
-            logging.error(f"Failed to connect to database: {e}")
-            return
+        self.connection = self.connector.connect()
+        
+        with self.connection.transaction(): # Register service if not registered, update if necessary
+            self.serviceId = self.inserter.registerService(self.connection, self.serviceName, self.serviceType)
 
         while True:
-            # Checks connection before attempting to log anything, attempting to reconnect on failure.
-            if self.connector.checkConnection(self.connection):
-                self.inserter.logHeartbeat(self.connection, self.serviceId, self.getHeartbeat())
-
+            heartbeat = self.getHeartbeat()
+            if heartbeat:
                 connections = self.getConnections()
-                if connections != -1: # Only log active connections if we were able to get a valid count
-                    self.inserter.logMetric(self.connection, self.serviceId, "active_connections", connections)
-
                 databaseSize = self.getDatabaseSize()
-                if databaseSize != -1: # Only log database size if we were able to get a valid size
-                    self.inserter.logMetric(self.connection, self.serviceId, "database_size_bytes", databaseSize)
+
+                with self.connection.transaction():
+                    self.inserter.logHeartbeat(self.connection, self.serviceId, heartbeat)
+
+                    if connections != -1: # Only log active connections if we were able to get a valid count
+                        self.inserter.logMetric(self.connection, self.serviceId, "active_connections", connections)
+
+                    if databaseSize != -1: # Only log database size if we were able to get a valid size
+                        self.inserter.logMetric(self.connection, self.serviceId, "database_size_bytes", databaseSize)
             else:
-                logging.warning("Heartbeat failed, attempting to reconnect to database...")
-                self.connector.disconnect(self.connection)
-                self.connector.connect()
-                self.connection = self.connector.connection
+                logging.warning("Database connection failed, attempting to reconnect to database...")
+
+                if self.connection:
+                    self.connector.disconnect(self.connection)
+                    self.connection = None
+                self.connection = self.connector.connect()
 
             time.sleep(self.interval)
 
