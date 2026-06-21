@@ -108,7 +108,7 @@ ON security.session (ip_address);
 
 CREATE TABLE security.action (
     id BIGSERIAL PRIMARY KEY,
-    session_id INT NOT NULL REFERENCES security.session(id),
+    session_id BIGINT NOT NULL REFERENCES security.session(id),
     action_type TEXT,
     description TEXT,
     timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW()
