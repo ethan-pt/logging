@@ -73,17 +73,17 @@ class DatabaseInserter:
         # so if registration fails we want to be able to easily check for that and avoid attempting to log 
         # anything else.
         try:
-            cur = connection.cursor()
-            cur.execute("""
-                INSERT INTO metadata.service (service_name, service_type)
-                VALUES (%s, %s)
-                ON CONFLICT (service_name) DO UPDATE 
-                SET service_name = EXCLUDED.service_name,
-                    service_type = EXCLUDED.service_type
-                RETURNING id
-            """, (serviceName, serviceType))
-            row = cur.fetchone()
-            serviceId = row[0]
+            with connection.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO metadata.service (service_name, service_type)
+                    VALUES (%s, %s)
+                    ON CONFLICT (service_name) DO UPDATE 
+                    SET service_name = EXCLUDED.service_name,
+                        service_type = EXCLUDED.service_type
+                    RETURNING id
+                """, (serviceName, serviceType))
+                row = cur.fetchone()
+                serviceId = row[0]
             connection.commit()
 
             logging.info(f"Service '{serviceName}' successfully registered with ID: {serviceId}")
