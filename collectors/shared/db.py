@@ -3,12 +3,6 @@ import psycopg
 import logging
 
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-)
-
-
 class DatabaseConnector:
     def __init__(self, connectTimeout: int = 10, statementTimeoutMs: int = 2000):
         self.dbUser = os.getenv("POSTGRES_USER")
