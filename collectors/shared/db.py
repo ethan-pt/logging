@@ -12,11 +12,14 @@ logging.basicConfig(
 
 
 class DatabaseConnector:
-    def __init__(self):
+    def __init__(self, connectTimeout: int = 10, statementTimeoutMs: int = 2000):
         self.dbUser = os.getenv("POSTGRES_USER")
         self.dbPassword = os.getenv("POSTGRES_PASSWORD")
         self.dbName = os.getenv("POSTGRES_DB")
         self.dbHost = os.getenv("POSTGRES_HOST")
+
+        self.connectTimeout = connectTimeout
+        self.statementTimeoutMs = statementTimeoutMs
 
     def connect(self) -> psycopg.Connection:
         if not all([self.dbUser, self.dbPassword, self.dbName, self.dbHost]):
@@ -27,7 +30,9 @@ class DatabaseConnector:
             dbname=self.dbName,
             user=self.dbUser,
             password=self.dbPassword,
-            autocommit=True
+            autocommit=True,
+            connect_timeout=self.connectTimeout,
+            options=f"-c statement_timeout={self.statementTimeoutMs}"
         )
 
         logging.info("Connected to PostgreSQL database successfully.")
