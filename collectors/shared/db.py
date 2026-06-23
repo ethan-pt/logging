@@ -68,7 +68,11 @@ class DatabaseInserter:
                     RETURNING id
                 """, (serviceName, serviceType))
                 serviceId = cur.fetchone()[0]
+                
+                if serviceId is None:
+                    raise RuntimeError("Service registration returned no ID")
                 logging.debug(f"Successfully connected to database and registered service {serviceName} with ID: {serviceId}")
+                
                 return serviceId
         except Exception as e:
             logging.exception(f"Error registering service '{serviceName}': {e}")
