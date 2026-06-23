@@ -68,7 +68,7 @@ class DatabaseInserter:
                     RETURNING id
                 """, (serviceName, serviceType))
                 serviceId = cur.fetchone()[0]
-                
+
                 if serviceId is None:
                     raise RuntimeError("Service registration returned no ID")
                 logging.debug(f"Successfully connected to database and registered service {serviceName} with ID: {serviceId}")
@@ -82,44 +82,44 @@ class DatabaseInserter:
         status = "active" if active == True else "inactive"
         with connection.cursor() as cur:
             cur.execute("""
-                INSERT INTO monitoring.heartbeat (service_id, status, timestamp)
-                VALUES (%s, %s, clock_timestamp())
+                INSERT INTO monitoring.heartbeat (service_id, status)
+                VALUES (%s, %s)
             """, (serviceId, status))
 
     def logMetric(self, connection, serviceId: int, metricName: str, metricValue: float) -> None:
         with connection.cursor() as cur:
             cur.execute("""
-                INSERT INTO monitoring.metrics (service_id, metric_name, metric_value, timestamp)
-                VALUES (%s, %s, %s, clock_timestamp())
+                INSERT INTO monitoring.metrics (service_id, metric_name, metric_value)
+                VALUES (%s, %s, %s)
             """, (serviceId, metricName, metricValue))
 
     def logEvent(self, connection, serviceId: int, eventType: str, eventMessage: str) -> None:
         with connection.cursor() as cur:
             cur.execute("""
-                INSERT INTO events.service_event (service_id, event_type, message, timestamp)
-                VALUES (%s, %s, %s, clock_timestamp())
+                INSERT INTO events.service_event (service_id, event_type, message)
+                VALUES (%s, %s, %s)
             """, (serviceId, eventType, eventMessage))
             return cur.fetchone()[0]
 
     def logLog(self, connection, serviceId: int, logLevel: str, logMessage: str) -> None:
         with connection.cursor() as cur:
             cur.execute("""
-                INSERT INTO logs.service_log (service_id, level, message, timestamp)
-                VALUES (%s, %s, %s, clock_timestamp())
+                INSERT INTO logs.service_log (service_id, level, message)
+                VALUES (%s, %s, %s)
             """, (serviceId, logLevel, logMessage))
 
     def logAccessEvent(self, connection, serviceId: int, targetType: str, eventType: str, ipAddress: str | None, username: str | None) -> None:
         with connection.cursor() as cur:
             cur.execute("""
-                INSERT INTO security.access_event (service_id, target_type, event_type, ip_address, username, timestamp)
-                VALUES (%s, %s, %s, %s, %s, clock_timestamp())
+                INSERT INTO security.access_event (service_id, target_type, event_type, ip_address, username)
+                VALUES (%s, %s, %s, %s, %s)
             """, (serviceId, targetType, eventType, ipAddress, username))
 
     def logSession(self, connection, serviceId: int, targetType: str, username: str | None, ipAddress: str | None) -> int:
         with connection.cursor() as cur:
             cur.execute("""
-                INSERT INTO security.session (service_id, target_type, username, ip_address, started_at)
-                VALUES (%s, %s, %s, %s, clock_timestamp())
+                INSERT INTO security.session (service_id, target_type, username, ip_address)
+                VALUES (%s, %s, %s, %s)
                 RETURNING id
             """, (serviceId, targetType, username, ipAddress))
             sessionId = cur.fetchone()[0]
@@ -128,6 +128,6 @@ class DatabaseInserter:
     def logAction(self, connection, sessionId: int, actionType: str | None, actionDescription: str | None) -> None:
         with connection.cursor() as cur:
             cur.execute("""
-                INSERT INTO security.action (session_id, action_type, description, timestamp)
-                VALUES (%s, %s, %s, clock_timestamp())
+                INSERT INTO security.action (session_id, action_type, description)
+                VALUES (%s, %s, %s)
             """, (sessionId, actionType, actionDescription))
