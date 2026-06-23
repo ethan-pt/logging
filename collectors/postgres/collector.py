@@ -38,17 +38,17 @@ class PostgresCollector:
         while True:
             heartbeat = self.getHeartbeat()
             if heartbeat:
-                connections = self.getConnections()
-                databaseSize = self.getDatabaseSize()
+                metrics = {
+                    "active_connections": self.getConnections(),
+                    "database_size_bytes": self.getDatabaseSize()
+                }
 
                 with self.connection.transaction():
                     self.inserter.logHeartbeat(self.connection, self.serviceId, heartbeat)
 
-                    if connections is not None:
-                        self.inserter.logMetric(self.connection, self.serviceId, "active_connections", connections)
-
-                    if databaseSize is not None:
-                        self.inserter.logMetric(self.connection, self.serviceId, "database_size_bytes", databaseSize)
+                    for name, value in metrics.items():
+                        if value is not None:
+                            self.inserter.logMetric(self.connection, self.serviceId, name, value)
             else:
                 logging.warning("Database connection failed, attempting to reconnect to database...")
 
