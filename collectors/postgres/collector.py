@@ -145,7 +145,7 @@ if __name__ == "__main__":
 
         except Exception as e:
             logging.exception(f"An error occurred while running the PostgreSQL Collector: {e}")
-            if collector.stableSince is not None and time.monotonic() - collector.stableSince >= stableThreshold:
+            if (collector.stableSince is not None) and ((time.monotonic() - collector.stableSince) >= stableThreshold):
                 delay = initialDelay
                 collector.stableSince = None
 
