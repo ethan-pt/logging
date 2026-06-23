@@ -72,13 +72,13 @@ class DatabaseInserter:
                         service_type = EXCLUDED.service_type
                     RETURNING id
                 """, (serviceName, serviceType))
-                serviceId = cur.fetchone()[0]
+                row = cur.fetchone()
 
-                if serviceId is None:
+                if row is None:
                     raise RuntimeError("Service registration returned no ID")
-                logging.debug(f"Successfully connected to database and registered service {serviceName} with ID: {serviceId}")
+                logging.debug(f"Successfully connected to database and registered service {serviceName} with ID: {row[0]}")
                 
-                return serviceId
+                return row[0]
         except Exception as e:
             logging.exception(f"Error registering service '{serviceName}': {e}")
             raise
@@ -126,8 +126,12 @@ class DatabaseInserter:
                 VALUES (%s, %s, %s, %s)
                 RETURNING id
             """, (serviceId, targetType, username, ipAddress))
-            sessionId = cur.fetchone()[0]
-            return sessionId
+            row = cur.fetchone()
+
+            if row is None:
+                raise RuntimeError("Session ID query returned no row.")
+            
+            return row[0]
 
     def logAction(self, connection, sessionId: int, actionType: str | None, actionDescription: str | None) -> None:
         with connection.cursor() as cur:
