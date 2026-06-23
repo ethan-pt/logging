@@ -104,7 +104,6 @@ class DatabaseInserter:
                 INSERT INTO events.service_event (service_id, event_type, message)
                 VALUES (%s, %s, %s)
             """, (serviceId, eventType, eventMessage))
-            return cur.fetchone()[0]
 
     def logLog(self, connection, serviceId: int, logLevel: str, logMessage: str) -> None:
         with connection.cursor() as cur:
