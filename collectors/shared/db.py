@@ -62,26 +62,22 @@ class DatabaseConnector:
 
 class DatabaseInserter:
     def registerService(self, connection, serviceName: str, serviceType: str) -> int:
-        try:
-            with connection.cursor() as cur:
-                cur.execute("""
-                    INSERT INTO metadata.service (service_name, service_type)
-                    VALUES (%s, %s)
-                    ON CONFLICT (service_name) DO UPDATE 
-                    SET service_name = EXCLUDED.service_name,
-                        service_type = EXCLUDED.service_type
-                    RETURNING id
-                """, (serviceName, serviceType))
-                row = cur.fetchone()
+        with connection.cursor() as cur:
+            cur.execute("""
+                INSERT INTO metadata.service (service_name, service_type)
+                VALUES (%s, %s)
+                ON CONFLICT (service_name) DO UPDATE 
+                SET service_name = EXCLUDED.service_name,
+                    service_type = EXCLUDED.service_type
+                RETURNING id
+            """, (serviceName, serviceType))
+            row = cur.fetchone()
 
-                if row is None:
-                    raise RuntimeError("Service registration returned no ID")
-                logging.debug(f"Successfully connected to database and registered service {serviceName} with ID: {row[0]}")
-                
-                return row[0]
-        except Exception as e:
-            logging.exception(f"Error registering service '{serviceName}': {e}")
-            raise
+            if row is None:
+                raise RuntimeError("Service registration returned no ID")
+            logging.debug(f"Successfully connected to database and registered service {serviceName} with ID: {row[0]}")
+            
+            return row[0]
     
     def logHeartbeat(self, connection, serviceId: int, active: bool) -> None:
         status = "active" if active == True else "inactive"
