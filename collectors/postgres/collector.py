@@ -35,6 +35,7 @@ class PostgresCollector:
         with self.connection.transaction(): # Register service if not registered, update if necessary
             self.serviceId = self.inserter.registerService(self.connection, self.serviceName, self.serviceType)
 
+        nextRun = time.monotonic()
         while True:
             heartbeat = self.getHeartbeat()
             if heartbeat:
@@ -50,10 +51,18 @@ class PostgresCollector:
                         if metricValue is not None:
                             self.inserter.logMetric(self.connection, self.serviceId, metricName, metricValue)
             else:
-                logging.warning("Database connection failed, attempting to reconnect to database...")
+                logging.error("Database connection failed, attempting to reconnect to database...")
                 self.reconnect()
 
-            time.sleep(self.interval)
+            nextRun += self.interval
+            now = time.monotonic()
+            if now > nextRun:
+                missedIntervals = int((now - nextRun) // self.interval) + 1
+                nextRun += missedIntervals * self.interval
+
+                logging.warning(f"Collection exceeded deadline. Skipping {missedIntervals} intervals.")
+
+            time.sleep(max(0, nextRun - time.monotonic()))
 
     def getHeartbeat(self) -> bool:
         connection = self.getConnection()
