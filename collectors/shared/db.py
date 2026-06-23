@@ -94,7 +94,6 @@ class DatabaseInserter:
             cur.execute("""
                 INSERT INTO events.service_event (service_id, event_type, message, timestamp)
                 VALUES (%s, %s, %s, clock_timestamp())
-                RETURNING id
             """, (serviceId, eventType, eventMessage))
             return cur.fetchone()[0]
 
@@ -103,7 +102,6 @@ class DatabaseInserter:
             cur.execute("""
                 INSERT INTO logs.service_log (service_id, level, message, timestamp)
                 VALUES (%s, %s, %s, clock_timestamp())
-                RETURNING id
             """, (serviceId, logLevel, logMessage))
 
     def logAccessEvent(self, connection, serviceId: int, targetType: str, eventType: str, ipAddress: str | None, username: str | None) -> None:
@@ -111,7 +109,6 @@ class DatabaseInserter:
             cur.execute("""
                 INSERT INTO security.access_event (service_id, target_type, event_type, ip_address, username, timestamp)
                 VALUES (%s, %s, %s, %s, %s, clock_timestamp())
-                RETURNING id
             """, (serviceId, targetType, eventType, ipAddress, username))
 
     def logSession(self, connection, serviceId: int, targetType: str, username: str | None, ipAddress: str | None) -> int:
@@ -129,5 +126,4 @@ class DatabaseInserter:
             cur.execute("""
                 INSERT INTO security.action (session_id, action_type, description, timestamp)
                 VALUES (%s, %s, %s, clock_timestamp())
-                RETURNING id
             """, (sessionId, actionType, actionDescription))
