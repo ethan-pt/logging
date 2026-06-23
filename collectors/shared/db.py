@@ -100,14 +100,14 @@ class DatabaseInserter:
                 VALUES (%s, %s, %s)
             """, (serviceId, logLevel, logMessage))
 
-    def logAccessEvent(self, connection, serviceId: int, targetType: str, eventType: str, ipAddress: str | None, username: str | None) -> None:
+    def logAccessEvent(self, connection, serviceId: int | None, targetType: str, eventType: str, ipAddress: str | None, username: str | None) -> None:
         with connection.cursor() as cur:
             cur.execute("""
                 INSERT INTO security.access_event (service_id, target_type, event_type, ip_address, username)
                 VALUES (%s, %s, %s, %s, %s)
             """, (serviceId, targetType, eventType, ipAddress, username))
 
-    def logSession(self, connection, serviceId: int, targetType: str, username: str | None, ipAddress: str | None) -> int:
+    def logSession(self, connection, serviceId: int | None, targetType: str, username: str | None, ipAddress: str | None) -> int:
         with connection.cursor() as cur:
             cur.execute("""
                 INSERT INTO security.session (service_id, target_type, username, ip_address)
