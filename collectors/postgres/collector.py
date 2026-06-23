@@ -51,12 +51,7 @@ class PostgresCollector:
                             self.inserter.logMetric(self.connection, self.serviceId, metricName, metricValue)
             else:
                 logging.warning("Database connection failed, attempting to reconnect to database...")
-
-                if self.connection:
-                    self.connector.disconnect(self.connection)
-                    self.connection = None
-                self.connection = self.connector.connect()
-                self.stableSince = time.monotonic()
+                self.reconnect()
 
             time.sleep(self.interval)
 
@@ -105,6 +100,13 @@ class PostgresCollector:
 
             return None
         
+    def reconnect(self) -> None:
+        if self.connection:
+            self.connector.disconnect(self.connection)
+            self.connection = None
+        self.connection = self.connector.connect()
+        self.stableSince = time.monotonic()
+
     def getConnection(self) -> psycopg.Connection:
         if self.connection is None:
             raise RuntimeError("No active database connection.")
