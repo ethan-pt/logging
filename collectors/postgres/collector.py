@@ -56,6 +56,7 @@ class PostgresCollector:
                     self.connector.disconnect(self.connection)
                     self.connection = None
                 self.connection = self.connector.connect()
+                self.stableSince = time.monotonic()
 
             time.sleep(self.interval)
 
