@@ -26,42 +26,71 @@ class PostgresCollector:
         self.stableSince = None
 
     def start(self) -> None:
-        logging.info("PostgreSQL Collector started...")
-
-        self.connection = self.connector.connect()
-        self.stableSince = time.monotonic()
-        
-        with self.connection.transaction(): # Register service if not registered, update if necessary
-            self.serviceId = self.inserter.registerService(self.connection, self.serviceName, self.serviceType)
+        logging.info("PostgreSQL Collector started. Running initialization...")
+        self.initialize()
 
         nextRun = time.monotonic()
         while True:
-            heartbeat = self.getHeartbeat()
-            if heartbeat:
-                metrics = {
-                    "active_connections": self.getConnections(),
-                    "database_size_bytes": self.getDatabaseSize()
-                }
+            self.collect()
+            nextRun = self.waitForNextRun(nextRun)
 
-                with self.connection.transaction():
-                    self.inserter.logHeartbeat(self.connection, self.serviceId, heartbeat)
+    def initialize(self) -> None:
+        self.connection = self.connector.connect()
+        connection = self.getConnection()
 
-                    for metricName, metricValue in metrics.items():
-                        if metricValue is not None:
-                            self.inserter.logMetric(self.connection, self.serviceId, metricName, metricValue)
-            else:
-                logging.error("Database connection failed, attempting to reconnect to database...")
-                self.reconnect()
+        with connection.transaction():
+            self.serviceId = self.inserter.registerService(connection, self.serviceName, self.serviceType)
+        
+        self.stableSince = time.monotonic()
+        
+    def collect(self) -> None:
+        if not self.getHeartbeat():
+            logging.error("Database connection failed, attempting to reconnect to database...")
+            self.reconnect()
+            return
+        
+        connection = self.getConnection()
+        serviceId = self.getServiceId()
+        metrics = {
+            "active_connections": self.getConnections(),
+            "database_size_bytes": self.getDatabaseSize()
+        }
 
-            nextRun += self.interval
-            now = time.monotonic()
-            if now > nextRun:
-                missedIntervals = int((now - nextRun) // self.interval) + 1
-                nextRun += missedIntervals * self.interval
+        with connection.transaction():
+            self.inserter.logHeartbeat(connection, serviceId, True)
 
-                logging.warning(f"Collection exceeded deadline. Skipping {missedIntervals} intervals.")
+            for metricName, metricValue in metrics.items():
+                if metricValue is not None:
+                    self.inserter.logMetric(connection, serviceId, metricName, metricValue)
 
-            time.sleep(max(0, nextRun - time.monotonic()))
+    def waitForNextRun(self, nextRun: float) -> float:
+        nextRun += self.interval
+        now = time.monotonic()
+        if now > nextRun:
+            missedIntervals = int((now - nextRun) // self.interval) + 1
+            nextRun += missedIntervals * self.interval
+
+            logging.warning(f"Collection exceeded deadline. Skipping {missedIntervals} intervals.")
+
+        time.sleep(max(0, nextRun - time.monotonic()))
+        return nextRun
+
+    def reconnect(self) -> None:
+        if self.connection:
+            self.connector.disconnect(self.connection)
+            self.connection = None
+        self.connection = self.connector.connect()
+        self.stableSince = time.monotonic()
+
+    def getConnection(self) -> psycopg.Connection:
+        if self.connection is None:
+            raise RuntimeError("No active database connection.")
+        return self.connection
+
+    def getServiceId(self) -> int:
+        if self.serviceId is None:
+            raise RuntimeError("No service ID available.")
+        return self.serviceId
 
     def getHeartbeat(self) -> bool:
         connection = self.getConnection()
@@ -107,18 +136,6 @@ class PostgresCollector:
             logging.error(f"Error checking database size: {e}")
 
             return None
-        
-    def reconnect(self) -> None:
-        if self.connection:
-            self.connector.disconnect(self.connection)
-            self.connection = None
-        self.connection = self.connector.connect()
-        self.stableSince = time.monotonic()
-
-    def getConnection(self) -> psycopg.Connection:
-        if self.connection is None:
-            raise RuntimeError("No active database connection.")
-        return self.connection
 
     def stop(self) -> None:
         logging.info("Shutting down PostgreSQL Collector...")
