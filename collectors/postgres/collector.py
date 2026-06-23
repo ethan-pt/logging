@@ -46,9 +46,9 @@ class PostgresCollector:
                 with self.connection.transaction():
                     self.inserter.logHeartbeat(self.connection, self.serviceId, heartbeat)
 
-                    for name, value in metrics.items():
-                        if value is not None:
-                            self.inserter.logMetric(self.connection, self.serviceId, name, value)
+                    for metricName, metricValue in metrics.items():
+                        if metricValue is not None:
+                            self.inserter.logMetric(self.connection, self.serviceId, metricName, metricValue)
             else:
                 logging.warning("Database connection failed, attempting to reconnect to database...")
 
