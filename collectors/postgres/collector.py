@@ -1,8 +1,8 @@
-import time
 import logging
-import psycopg.errors
+import psycopg
 
 from shared.db import DatabaseConnector, DatabaseInserter
+from shared.runtime import runCollector, RuntimeConfig
 
 
 logging.basicConfig(
@@ -12,26 +12,15 @@ logging.basicConfig(
 
 
 class PostgresCollector:
-    def __init__(self, connector, interval: int = 10):
-        self.interval = interval
-
+    def __init__(self, connector):
         self.connector = connector
-        self.connection = None
+        self.connection: psycopg.Connection | None = None
+
         self.inserter = DatabaseInserter()
 
-        self.serviceId = None
+        self.serviceId: int | None = None
         self.serviceName = 'PostgreSQL'
         self.serviceType = 'database'
-
-        self.stableSince = None
-
-    def start(self) -> None:
-        self.initialize()
-
-        nextRun = time.monotonic()
-        while True:
-            self.collect()
-            nextRun = self.waitForNextRun(nextRun)
 
     def initialize(self) -> None:
         self.connection = self.connector.connect()
@@ -40,18 +29,18 @@ class PostgresCollector:
         with connection.transaction():
             self.serviceId = self.inserter.registerService(connection, self.serviceName, self.serviceType)
         
-        self.stableSince = time.monotonic()
-        
     def collect(self) -> None:
         if not self.getHeartbeat():
             logging.error(f"Connection to {self.serviceName} failed, attempting to reconnect...")
             self.reconnect()
             return
+        elif self.serviceId is None:
+            raise RuntimeError("Service ID is not set.")
         
         connection = self.getConnection()
-        serviceId = self.getServiceId()
+        serviceId = self.serviceId
         metrics = {
-            "active_connections": self.getConnections(),
+            "active_connections": self.getDatabaseConnections(),
             "database_size_bytes": self.getDatabaseSize()
         }
 
@@ -62,34 +51,16 @@ class PostgresCollector:
                 if metricValue is not None:
                     self.inserter.logMetric(connection, serviceId, metricName, metricValue)
 
-    def waitForNextRun(self, nextRun: float) -> float:
-        nextRun += self.interval
-        now = time.monotonic()
-        if now > nextRun:
-            missedIntervals = int((now - nextRun) // self.interval) + 1
-            nextRun += missedIntervals * self.interval
-
-            logging.warning(f"Collection exceeded deadline. Skipping {missedIntervals} intervals.")
-
-        time.sleep(max(0, nextRun - time.monotonic()))
-        return nextRun
-
     def reconnect(self) -> None:
         if self.connection:
             self.connector.disconnect(self.connection)
             self.connection = None
         self.connection = self.connector.connect()
-        self.stableSince = time.monotonic()
 
     def getConnection(self) -> psycopg.Connection:
         if self.connection is None:
             raise RuntimeError("No active database connection.")
         return self.connection
-
-    def getServiceId(self) -> int:
-        if self.serviceId is None:
-            raise RuntimeError("No service ID available.")
-        return self.serviceId
 
     def getHeartbeat(self) -> bool:
         connection = self.getConnection()
@@ -104,7 +75,7 @@ class PostgresCollector:
 
             return False
 
-    def getConnections(self) -> int | None:
+    def getDatabaseConnections(self) -> int | None:
         connection = self.getConnection()
 
         try:
@@ -137,39 +108,15 @@ class PostgresCollector:
             return None
 
     def stop(self) -> None:
-        logging.info("Shutting down PostgreSQL Collector...")
-
         if self.connection:
             self.connector.disconnect(self.connection)
             self.connection = None
 
 
 if __name__ == "__main__":
-    initialDelay = 5
-    maxDelay = 600 # 10 minutes
-    stableThreshold = 300  # 5 minutes
-    delay = initialDelay
-
-    while True:
-        collector = PostgresCollector(connector=DatabaseConnector())
-        try:
-            collector.start()
-
-        except KeyboardInterrupt:
-            logging.info("\nShutdown signal received...")
-            break
-
-        except Exception:
-            logging.exception("An error occurred while running the PostgreSQL Collector.")
-            
-            if (collector.stableSince is not None) and ((time.monotonic() - collector.stableSince) >= stableThreshold):
-                delay = initialDelay
-                collector.stableSince = None
-
-            logging.info(f"Attempting to restart collector in {delay} seconds...")
-
-            time.sleep(delay)
-            delay = min(delay * 2, maxDelay)
-
-        finally:
-            collector.stop()
+    config = RuntimeConfig()
+    runCollector(
+        factory=lambda: PostgresCollector(DatabaseConnector()),
+        collectorName="PostgreSQL",
+        config=config
+    )
