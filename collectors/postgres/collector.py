@@ -20,13 +20,12 @@ class PostgresCollector:
         self.inserter = DatabaseInserter()
 
         self.serviceId = None
-        self.serviceName = 'postgres'
+        self.serviceName = 'PostgreSQL'
         self.serviceType = 'database'
 
         self.stableSince = None
 
     def start(self) -> None:
-        logging.info("PostgreSQL Collector started. Running initialization...")
         self.initialize()
 
         nextRun = time.monotonic()
@@ -45,7 +44,7 @@ class PostgresCollector:
         
     def collect(self) -> None:
         if not self.getHeartbeat():
-            logging.error("Database connection failed, attempting to reconnect to database...")
+            logging.error(f"Connection to {self.serviceName} failed, attempting to reconnect...")
             self.reconnect()
             return
         
