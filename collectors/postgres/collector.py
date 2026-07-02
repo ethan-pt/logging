@@ -1,3 +1,4 @@
+import time
 import logging
 import psycopg
 
@@ -12,7 +13,10 @@ logging.basicConfig(
 
 
 class PostgresCollector:
+    collectionIntervals = ("fast",)
+
     def __init__(self, connector):
+
         self.connector = connector
         self.connection: psycopg.Connection | None = None
 
@@ -22,20 +26,22 @@ class PostgresCollector:
         self.serviceName = 'PostgreSQL'
         self.serviceType = 'database'
 
+        self.lastSuccessfulHeartbeat: float | None = None
+
     def initialize(self) -> None:
         self.connection = self.connector.connect()
         connection = self.getConnection()
 
         with connection.transaction():
             self.serviceId = self.inserter.registerService(connection, self.serviceName, self.serviceType)
-        
-    def collect(self) -> None:
+
+    def collectFast(self) -> None:
         if not self.getHeartbeat():
-            logging.error(f"Connection to {self.serviceName} failed, attempting to reconnect...")
-            self.reconnect()
-            return
+            raise RuntimeError("Database heartbeat check failed.")
         elif self.serviceId is None:
             raise RuntimeError("Service ID is not set.")
+        
+        self.lastSuccessfulHeartbeat = time.monotonic()
         
         connection = self.getConnection()
         serviceId = self.serviceId
@@ -50,12 +56,6 @@ class PostgresCollector:
             for metricName, metricValue in metrics.items():
                 if metricValue is not None:
                     self.inserter.logMetric(connection, serviceId, metricName, metricValue)
-
-    def reconnect(self) -> None:
-        if self.connection:
-            self.connector.disconnect(self.connection)
-            self.connection = None
-        self.connection = self.connector.connect()
 
     def getConnection(self) -> psycopg.Connection:
         if self.connection is None:
