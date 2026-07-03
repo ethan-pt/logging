@@ -28,5 +28,5 @@ As of writing, this project is very much still in active development. Here's wha
 - [ ] Alerts for when bad things happen (email? smoke signals?)
 - [x] Only attempt to log other data if heartbeat is successful
 - [ ] Data culling/consolidating of some sort (averaging metric across time periods as they get older, just delete most of the rest of it once it's not likely to be relevant) to avoid filling my poor old HDD :(
-- [ ] Use something like Grafana for data vis
+- [ ] Use something like Grafana for data vis, Alloy for log collection, and Loki for log storage
 - [ ] Support for fully (or at least mostly (I'll settle for somewhat)) automated inclusion of templated containers (Minecraft servers generated with mcman tool, etc.)
