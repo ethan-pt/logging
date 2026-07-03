@@ -1,6 +1,6 @@
 # Homelab Logging System
 
-A centralized loggins and observability(soon™) platform for all kinds of data from and about my homelab Ubuntu Server and any other project I buid that interacts with it. The idea is that it's as modular and reliable as possible so I can easily integrate new projects with minimal maintenance and monitor processes, their performance, analyze security stuff, and more efficiently plan for future hardware upgrades depending on how this all grows.
+A centralized logging and observability(soon™) platform for all kinds of data from and about my homelab Ubuntu Server and any other project I buid that interacts with it. The idea is that it's as modular and reliable as possible so I can easily integrate new projects with minimal maintenance and monitor processes, their performance, analyze security stuff, and more efficiently plan for future hardware upgrades depending on how this all grows.
 
 ## Data Collection
 
